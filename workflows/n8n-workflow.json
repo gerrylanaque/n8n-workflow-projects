@@ -1,1 +1,1335 @@
-
+{
+  "name": "First Automations & Agent Concepts - Github Portfolio",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "YOUR_WEBHOOK_PATH",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        256
+      ],
+      "id": "bcd50911-5221-4335-b346-905c77197b4c",
+      "name": "Webhook1",
+      "webhookId": "REMOVED"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        2224,
+        304
+      ],
+      "id": "c2a28fdc-520a-4190-b9f2-b10d39305eaf",
+      "name": "Google Gemini Chat Model3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        496
+      ],
+      "id": "57e86504-969d-4166-a418-3a5ac860d5cb",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"order_id\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The unique order identifier (e.g., SAMPLE-04), or null if unspecified\"\n    },\n    \"company_name\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The customer or business name placing the order, or null if unspecified\"\n    },\n    \"customer_id\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"The sender's email address, or null if unspecified\"\n    },\n    \"raw_order_text\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"A formatted summary of all requested items, quantities (kg), and grind settings, or null if unspecified\"\n    },\n    \"notes_for_human\": {\n      \"type\": [\"string\", \"null\"],\n      \"description\": \"Operational notes or human instructions mentioned by the customer, or null if none\"\n    },\n    \"parsed_items\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"object\",\n        \"properties\": {\n          \"product_name\": {\n            \"type\": [\"string\", \"null\"],\n            \"description\": \"Name of the coffee product or bean variety requested\"\n          },\n          \"quantity_kg\": {\n            \"type\": [\"number\", \"null\"],\n            \"description\": \"Quantity in kilograms requested\"\n          },\n          \"grind_setting\": {\n            \"type\": [\"string\", \"null\"],\n            \"description\": \"Grind setting specified (e.g., espresso, filter, whole bean), or null if unspecified\"\n          },\n          \"notes\": {\n            \"type\": [\"string\", \"null\"],\n            \"description\": \"Any specific note for this item\"\n          }\n        },\n        \"required\": [\"product_name\", \"quantity_kg\", \"grind_setting\", \"notes\"]\n      },\n      \"description\": \"Structured array of items extracted from the order\"\n    }\n  },\n  \"required\": [\n    \"order_id\",\n    \"company_name\",\n    \"customer_id\",\n    \"raw_order_text\",\n    \"notes_for_human\",\n    \"parsed_items\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        240,
+        496
+      ],
+      "id": "38b75cb1-754f-4165-839d-05f6e49569ca",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "94f3f2d2-7272-4297-94a5-8f520d7b5155",
+              "name": "customer_id",
+              "value": "={{ $json.output.customer_id }}",
+              "type": "string"
+            },
+            {
+              "id": "aed67e2e-7159-4450-83b3-2d237a540f0d",
+              "name": "raw_order_text",
+              "value": "={{ $json.output.raw_order_text }}",
+              "type": "string"
+            },
+            {
+              "id": "9c50b2aa-58fe-4b2d-8a45-c1fa90e60691",
+              "name": "order_id",
+              "value": "={{ $json.output.order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "fa037f4c-35ba-4188-9d25-97c374a7e52e",
+              "name": "notes_for_human",
+              "value": "={{ $('extract').item.json.output.notes_for_human }}",
+              "type": "string"
+            },
+            {
+              "id": "1730a350-b0be-4ee9-9609-0d6303c0630d",
+              "name": "parsed_items",
+              "value": "={{ $('extract').item.json.output.parsed_items }}",
+              "type": "array"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        256
+      ],
+      "id": "bba445b7-9076-4f19-8e0a-710da994939c",
+      "name": "set"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an order parser for Volta Coffee Roasters, located in Porto where many customers communicate in Portuguese.\n\nExtract these exact fields from the customer order message:\n- \"company_name\": The company or business name explicitly stated in the message. If missing, attempt to extract and clean the business name from the sender's email domain (e.g., orders@bluebottle.com -> Blue Bottle). Ignore generic email providers (e.g., gmail.com, yahoo.com, outlook.com) and return null if unspecified.\n- \"order_id\": The order ID provided under \"Order ID\" below (e.g., SAMPLE-02), or return null if unspecified.\n- \"customer_id\": the sender's email address provided (use null if unspecified).\n- \"raw_order_text\": full formatted summary of items requested, quantities (kg), and grind settings (use null if unspecified)\n- \"notes_for_human\": Flag any original Portuguese terms, slang, or informal phrasing used by the customer (e.g., note that customer wrote \"da casa\" for house blend).\n- \"parsed_items\": A list of extracted order items, where each item contains \"product_name\", \"quantity_kg\", \"grind_setting\", and \"notes\". Return an empty array [] if no items can be extracted.\n\nRules:\n1. \"company_name\": Look at the Email Subject line or the email address provided under \"Sender Email\" below.\n2. \"customer_id\": Copy the email address provided under \"Sender Email\" below directly into the JSON field.\n3. Return true JSON null values (without quotes) when information is missing or unspecified. Do not return empty strings \"\".\n4. Product Name Mapping: Always map customer product descriptions to standard English catalog names in \"product_name\" (e.g., map \"da casa\" -> \"House Blend\") so database lookups succeed. Preserve the original phrasing in the \"notes\" field of the item and in \"notes_for_human\".\n\n\nOrder ID:\n{{ $json.body.id }}\n\nSubject:\n{{ $json.body.subject }}\n\nBody:\n{{ $json.body.body }}\n\nSender Email:\n{{ $json.body.from_email }}",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        96,
+        256
+      ],
+      "id": "266ef8f7-d3cb-4ae7-bc98-d8db56b54f5b",
+      "name": "extract",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "wholesale-review"
+        },
+        "text": "=Novo pedido por grosso de {{ $json.fields.customer_id }}. Artigos: {{ $json.fields.raw_order_text }}. Observações: {{ $('extract').item.json.output.notes_for_human }}. Estado: Rascunho de e-mail criado",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1920,
+        64
+      ],
+      "id": "73cf7b28-7fa5-43e6-87fc-61fd28a64415",
+      "name": "notification 1",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "customer-service"
+        },
+        "text": "=Rascunho rejeitado para\n\n{{ $('set').item.json.output.company_name }}\n\n{{ $('set').item.json.output.customer_id }}\n\nNenhuma confirmação de pedido foi enviada. Por favor, escreva uma resposta manual.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2944,
+        160
+      ],
+      "id": "3c25d2b2-f921-4fa9-9553-8ce42e699f00",
+      "name": "notification 2",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a customer service reply drafter for Volta Coffee Roasters, a specialty coffee roaster.\n\nContext: The B2B customer has submitted a wholesale order\n\nDraft a short customer-facing reply that:\n- Acknowledges the matter specifically, using the product and amount mentioned in the ticket.\n- Uses a calm, human, non-corporate tone.\n- Is 1-2 sentences maximum.\n- **Language Requirement: Write the entire reply in Portuguese.**\n\nReturn exactly one valid JSON object with this shape:\n\n{\n  \"draftReply\": \"string\"\n}\n\nInput:\ncustomer_id: {{ $('set').item.json.output.customer_id }}\nraw_order_text: {{ $('set').item.json.output.raw_order_text }}\n\nDraft the reply now.",
+        "messages": {
+          "messageValues": []
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        2144,
+        64
+      ],
+      "id": "317670d7-30ca-4822-9d27-a1cb17b5fc64",
+      "name": "draft email",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#wholesale-review",
+          "mode": "name"
+        },
+        "message": "=Rascunho de resposta pronto para revisão\n\ncustomer_id: {{ $('set').item.json.output.customer_id }}\nraw_order_text: {{ $('set').item.json.output.raw_order_text }}\nreceived_at: {{ $('Webhook1').item.json.body.received_at }}\n\nRascunho de resposta: {{ JSON.parse($json.text.replace(/```json|```/g, '')).draftReply }}\n\nAprove para enviar conforme o rascunho ou rejeite para escrever a sua própria resposta manualmente.",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2496,
+        64
+      ],
+      "id": "b1201df5-5225-4d4c-a160-a15ea013afb3",
+      "name": "Send message and wait for response",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bdae9725-d60f-4781-a448-26e52d6caa65",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2720,
+        64
+      ],
+      "id": "617249ff-6204-44a6-aef6-495d6f960892",
+      "name": "approval"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('extract').item.json.output.customer_id }}",
+        "subject": "=Confirmação do seu pedido por grosso – {{ $now.toFormat('LLL dd, yyyy') }}",
+        "message": "=Olá,\n\nRecebemos o seu pedido de {{ $('extract').item.json.output.raw_order_text }}. Vamos prepará-lo para a próxima torra.\n\nObrigado!\n\nEquipa Volta Coffee Roasters",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2944,
+        -32
+      ],
+      "id": "d52de635-b984-46b4-875e-fff894469d8e",
+      "name": "confirm order email",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail VCR"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Volta Coffee",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Products",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        256
+      ],
+      "id": "c8140b9b-cbf9-41f3-ab0b-8437945e503c",
+      "name": "Search records",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Fetch parsed items from your LLM Extract node\nconst parsedItems = $('extract').item.json.output.parsed_items || [];\n\n// 2. Fetch inventory rows from your Airtable node\nconst inventoryRows = $('Search records').all(); \n\nlet inStockCount = 0;\nlet outOfStockCount = 0;\n\n// Cross-reference parsed order items against Airtable stock\nparsedItems.forEach(item => {\n  const matchedProduct = inventoryRows.find(row => {\n    const fields = row.json.fields || row.json;\n    const productName = (fields.name || fields.product_name || '').toLowerCase();\n    const itemMention = (item.product_name || item.product_mention || '').toLowerCase();\n    return productName.includes(itemMention) || itemMention.includes(productName);\n  });\n\n  if (matchedProduct) {\n    const fields = matchedProduct.json.fields || matchedProduct.json;\n    if (fields.in_stock === true || fields.in_stock === 'TRUE' || fields.in_stock === 1) {\n      inStockCount++;\n    } else {\n      outOfStockCount++;\n    }\n  } else {\n    outOfStockCount++;\n  }\n});\n\n// Calculate items_in_stock flag\nlet itemsInStockFlag = \"all\";\nif (outOfStockCount > 0 && inStockCount > 0) {\n  itemsInStockFlag = \"partial\";\n} else if (outOfStockCount > 0 && inStockCount === 0) {\n  itemsInStockFlag = \"none\";\n}\n\n// Check text for urgency and substitution keywords\nconst rawOrderText = $('extract').item.json.output.raw_order_text || '';\nconst notesForHuman = $('extract').item.json.output.notes_for_human || '';\nconst fullText = (rawOrderText + ' ' + notesForHuman).toLowerCase();\n\nconst urgencyWords = ['urgent', 'asap', 'today', 'thursday', 'tasting event', 'rushed'];\nconst urgencyPresent = urgencyWords.some(word => fullText.includes(word));\n\nconst substitutionWords = ['swap', 'substitute', 'instead', 'replace', 'alternative'];\nconst substitutionsPresent = substitutionWords.some(word => fullText.includes(word));\n\n// Output payload for your Bounded AI Agent\nreturn {\n  json: {\n    raw_order_text: rawOrderText,\n    customer: {\n      customer_id: $('extract').item.json.output.customer_id,\n      name: $('extract').item.json.output.company_name,\n      tier: \"regular\",\n      usual_pattern: \"4kg house blend weekly\"\n    },\n    parsed_items: parsedItems,\n    deterministic_flags: {\n      items_in_stock: itemsInStockFlag,\n      urgency_words_present: urgencyPresent,\n      substitutions_present: substitutionsPresent,\n      quantity_within_usual: true\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        256
+      ],
+      "id": "1ca26339-0f3b-46f0-a6b7-991abc6f75cc",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI order evaluation agent for Volta Coffee Roasters. Analyze the incoming order payload and deterministic flags to output three keys: classification, tool, and reason.\n\nINPUT PAYLOAD:\n{{ JSON.stringify($json, null, 2) }}\n\nROUTING RULES:\n1. Standard Order:\n   - items_in_stock is \"all\" AND no urgency/substitutions AND quantity within usual.\n   - classification: \"standard\"\n   - tool: \"route_standard\"\n\n2. Needs Review:\n   - Partial/no stock, OR custom substitution requested, OR urgent request.\n   - classification: \"needs_review\"\n   - tool: \"route_review\"\n\n3. Needs Clarification:\n   - Ambiguous, contradictory, or missing critical order details.\n   - classification: \"needs_clarification\"\n   - tool: \"route_clarification\"\n\nOUTPUT REQUIREMENTS:\n- Produce exactly three keys: classification, tool, and reason.\n- Keep the reason to one clear sentence.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1120,
+        256
+      ],
+      "id": "a2189146-e235-43b0-b09e-1579496d4a77",
+      "name": "AI Agent",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1136,
+        496
+      ],
+      "id": "aff5b21f-a987-440b-8e3f-76e4e3819a2e",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"classification\": {\n      \"type\": \"string\",\n      \"enum\": [\"standard\", \"needs_review\", \"needs_clarification\"],\n      \"description\": \"The category of the order\"\n    },\n    \"tool\": {\n      \"type\": \"string\",\n      \"enum\": [\"route_standard\", \"route_review\", \"route_clarification\"],\n      \"description\": \"The target route for downstream actions\"\n    },\n    \"reason\": {\n      \"type\": \"string\",\n      \"description\": \"One sentence explaining why this classification and tool were selected\"\n    }\n  },\n  \"required\": [\n    \"classification\",\n    \"tool\",\n    \"reason\"\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1264,
+        496
+      ],
+      "id": "f52e2836-6bc7-485e-8884-af8b27d12388",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.tool }}",
+                    "rightValue": "route_standard",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "3be9f7e8-f575-4c71-a9de-0074bfd64d64"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "47127298-47ae-425b-8aba-9ef1fa588ef4",
+                    "leftValue": "={{ $json.output.tool }}",
+                    "rightValue": "route_review",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2b0f054a-b582-4dd4-9689-3055cccb6c11",
+                    "leftValue": "={{ $json.output.tool }}",
+                    "rightValue": "route_clarification",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1472,
+        240
+      ],
+      "id": "de9bec37-5f29-4517-9a65-6e2125a327d2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Volta Coffee",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Wholesale_Orders",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('set').item.json.output.order_id }}",
+            "customer_id": "={{ $('set').item.json.output.customer_id }}",
+            "raw_order_text": "={{ $('set').item.json.output.raw_order_text }}",
+            "parsed_items": "={{ JSON.stringify($('set').item.json.output.parsed_items) }}",
+            "classification": "standard",
+            "agent_reason": "={{ $json.output.reason }}",
+            "status": "draft_created"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "raw_order_text",
+              "displayName": "raw_order_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parsed_items",
+              "displayName": "parsed_items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "classification",
+              "displayName": "classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "standard",
+                  "value": "standard"
+                },
+                {
+                  "name": "needs_review",
+                  "value": "needs_review"
+                },
+                {
+                  "name": "needs_clarification",
+                  "value": "needs_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "agent_reason",
+              "displayName": "agent_reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_review",
+                  "value": "pending_review"
+                },
+                {
+                  "name": "draft_created",
+                  "value": "draft_created"
+                },
+                {
+                  "name": "pending_clarification",
+                  "value": "pending_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        64
+      ],
+      "id": "87c0d185-3df8-460b-8832-1b600b47159c",
+      "name": "create or update a record (standard)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Volta Coffee",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Wholesale_Orders",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('set').item.json.output.order_id }}",
+            "customer_id": "={{ $('set').item.json.output.customer_id }}",
+            "raw_order_text": "={{ $('set').item.json.output.raw_order_text }}",
+            "parsed_items": "={{ JSON.stringify($('set').item.json.output.parsed_items) }}",
+            "classification": "needs_review",
+            "agent_reason": "={{ $('AI Agent').item.json.output.reason }}",
+            "status": "pending_review"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "raw_order_text",
+              "displayName": "raw_order_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parsed_items",
+              "displayName": "parsed_items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "classification",
+              "displayName": "classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "standard",
+                  "value": "standard"
+                },
+                {
+                  "name": "needs_review",
+                  "value": "needs_review"
+                },
+                {
+                  "name": "needs_clarification",
+                  "value": "needs_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "agent_reason",
+              "displayName": "agent_reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_review",
+                  "value": "pending_review"
+                },
+                {
+                  "name": "draft_created",
+                  "value": "draft_created"
+                },
+                {
+                  "name": "pending_clarification",
+                  "value": "pending_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        256
+      ],
+      "id": "262ef28c-a147-4cbd-88ea-a2c1c5628ad7",
+      "name": "create or update a record (need review)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "wholesale-review"
+        },
+        "text": "=☕ *Pedido por grosso – Informações em falta*  Olá, equipa! Podem contactar o cliente {{ $('set').item.json.output.customer_id }} para esclarecer os detalhes em falta?  \n\nPedido: {{ $('set').item.json.output.raw_order_text }} \n\nObservações:{{ $('set').item.json.output.notes_for_human }} \n\nObrigado!",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1920,
+        448
+      ],
+      "id": "1e438430-4c4c-4832-a83c-38bd6ebe747e",
+      "name": "notification 3",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Volta Coffee",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Wholesale_Orders",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $('set').item.json.output.order_id }}",
+            "customer_id": "={{ $('set').item.json.output.customer_id }}",
+            "raw_order_text": "={{ $('set').item.json.output.raw_order_text }}",
+            "parsed_items": "={{ JSON.stringify($('set').item.json.output.parsed_items) }}",
+            "classification": "needs_clarification",
+            "agent_reason": "={{ $('AI Agent').item.json.output.reason }}",
+            "status": "pending_clarification"
+          },
+          "matchingColumns": [
+            "order_id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "order_id",
+              "displayName": "order_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "received_at",
+              "displayName": "received_at",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": true
+            },
+            {
+              "id": "raw_order_text",
+              "displayName": "raw_order_text",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "parsed_items",
+              "displayName": "parsed_items",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "classification",
+              "displayName": "classification",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "standard",
+                  "value": "standard"
+                },
+                {
+                  "name": "needs_review",
+                  "value": "needs_review"
+                },
+                {
+                  "name": "needs_clarification",
+                  "value": "needs_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "agent_reason",
+              "displayName": "agent_reason",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "pending_review",
+                  "value": "pending_review"
+                },
+                {
+                  "name": "draft_created",
+                  "value": "draft_created"
+                },
+                {
+                  "name": "pending_clarification",
+                  "value": "pending_clarification"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1696,
+        448
+      ],
+      "id": "57886cd3-e20c-49e1-abfd-c697bd54ed9d",
+      "name": "create or update a record (need clarification)",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "wholesale-review"
+        },
+        "text": "=⚠️ *Pedido por grosso – Requer revisão*\n\nO pedido foi sinalizado como não padrão e precisa de revisão.\n\n• Order_Id: `{{ $('set').item.json.output.order_id }}`\n• Classificação: `needs_review`\n• Estado: `pending_review`\n\nMotivo: {{ $('set').item.json.output.notes_for_human }}\nPor favor, revejam o pedido e confirmem os próximos passos.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1920,
+        256
+      ],
+      "id": "1394925d-3a28-4907-8ea5-9a4675c22b2c",
+      "name": "notification 4",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model3": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "draft email",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "extract",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "extract": {
+      "main": [
+        [
+          {
+            "node": "set",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "notification 1": {
+      "main": [
+        [
+          {
+            "node": "draft email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "draft email": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "approval",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "approval": {
+      "main": [
+        [
+          {
+            "node": "confirm order email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "notification 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "create or update a record (standard)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create or update a record (need review)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "create or update a record (need clarification)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create or update a record (standard)": {
+      "main": [
+        [
+          {
+            "node": "notification 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create or update a record (need review)": {
+      "main": [
+        [
+          {
+            "node": "notification 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create or update a record (need clarification)": {
+      "main": [
+        [
+          {
+            "node": "notification 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "REMOVED",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "REMOVED",
+  "tags": []
+}
