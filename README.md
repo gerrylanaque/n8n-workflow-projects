@@ -2,7 +2,7 @@
 
 An automated ingestion workflow built in n8n. The system processes incoming order payloads, uses Google Gemini to extract structured JSON entities, applies conditional routing, and features human-in-the-loop review before dispatching outputs.
 
-![n8n Workflow Canvas](screenshots/n8n enquiry ingestion automation.png)
+![n8n Workflow Canvas](screenshots/n8n%20enquiry%20ingestion%20automation.png))
 
 ## 📌 Project Overview
 - **Trigger:** Webhooks / Incoming API Payloads
