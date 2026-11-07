@@ -1,8 +1,8 @@
 # AI-Powered Automated Order Ingestion Pipeline
 
-An automated multi-channel ingestion workflow built in n8n. The system processes incoming order payloads, uses Google Gemini to extract structured JSON entities, applies conditional routing, and features human-in-the-loop review before dispatching outputs.
+An automated ingestion workflow built in n8n. The system processes incoming order payloads, uses Google Gemini to extract structured JSON entities, applies conditional routing, and features human-in-the-loop review before dispatching outputs.
 
-![n8n Workflow Canvas](screenshots/workflow-canvas.png)
+![n8n Workflow Canvas](screenshots/n8n enquiry ingestion automation.png)
 
 ## 📌 Project Overview
 - **Trigger:** Webhooks / Incoming API Payloads
@@ -17,7 +17,6 @@ An automated multi-channel ingestion workflow built in n8n. The system processes
 
 ## 📁 Repository Structure
 - `/workflows/n8n-workflow.json`: Exported n8n workflow file (sanitized).
-- `/docs/ai-brief-proposal.pdf`: Complete business case study and technical proposal.
 
 ## 🚀 How to Import into n8n
 1. Download `workflows/n8n-workflow.json`.
