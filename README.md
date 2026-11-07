@@ -16,7 +16,7 @@ An automated ingestion workflow built in n8n. The system processes incoming orde
 - **Human-in-the-Loop Validation:** Route notifications to Slack requiring manual approval prior to dispatching external communications.
 
 ## 📁 Repository Structure
-- `/workflows/n8n-workflow.json`: Exported n8n workflow file (sanitized).
+- [`workflows/n8n-workflow.json`](workflows/n8n-workflow.json) : Exported n8n workflow file (sanitized).
 
 ## 🚀 How to Import into n8n
 1. Download `workflows/n8n-workflow.json`.
