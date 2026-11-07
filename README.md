@@ -12,7 +12,6 @@ An automated multi-channel ingestion workflow built in n8n. The system processes
 
 ## 🏗️ Key Architecture & Features
 - **"One Node, One Task" Isolation:** Decoupled execution steps for scalable logging and deterministic error handling.
-- **Data Anonymization:** PII and sensitive customer parameters are stripped before sending payloads to external LLMs.
 - **Structured Output Parsing:** Enforces strict JSON schema validation to guarantee reliable database writes.
 - **Human-in-the-Loop Validation:** Route notifications to Slack requiring manual approval prior to dispatching external communications.
 
