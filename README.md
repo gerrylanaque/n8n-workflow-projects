@@ -21,6 +21,6 @@ Each automation project is organized in its own self-contained folder containing
 
 ```text
 .
-├── enquiry-ingestion-automation/   # Multi-channel order ingestion pipeline
+├── enquiry-ingestion-automation/   # Order ingestion pipeline
 ├── [future-workflow-name]/         # Reserved for next workflow project
 └── README.md                       # Main portfolio overview
