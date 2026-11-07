@@ -17,7 +17,7 @@ An automated ingestion workflow built in n8n. The system processes incoming orde
 
 ## 📁 Repository Structure
 - [`workflows/n8n-workflow.json`](workflows/n8n-workflow.json) : Exported n8n workflow file (sanitized).
-- - [`docs/Automation_Agent_Brief_EN.pdf`](docs/Automation_Agent_Brief_EN.pdf) : Full AI Brief Proposal & System Spec (English).
+- [`docs/Automation_Agent_Brief_EN.pdf`](docs/Automation_Agent_Brief_EN.pdf) : Full AI Brief Proposal & System Spec (English).
 - [`docs/Automation_Agent_Brief_DE.pdf`](docs/Automation_Agent_Brief_DE.pdf) : AI-Briefing-Vorschlag & Systemspezifikation (Deutsch).
 
 ## 🚀 How to Import into n8n
