@@ -1,27 +1,26 @@
-# AI-Powered Automated Order Ingestion Pipeline
+# AI & Enterprise Automation Portfolio
 
-An automated ingestion workflow built in n8n. The system processes incoming order payloads, uses Google Gemini to extract structured JSON entities, applies conditional routing, and features human-in-the-loop review before dispatching outputs.
+A curated collection of production-ready automation workflows, AI agent pipelines, and business integration specs built primarily using **n8n**, **LLM integrations**, and enterprise software APIs.
 
-![n8n Workflow Canvas](screenshots/n8n%20enquiry%20ingestion%20automation.png)
+---
 
-## 📌 Project Overview
-- **Trigger:** Webhooks / Incoming API Payloads
-- **AI Engine:** Google Gemini Structured Output Parser
-- **Core Automation:** n8n
-- **Error Handling:** Conditional branching & human approval via Slack
+## 🏗️ Architecture & Operational Philosophy
 
-## 🏗️ Key Architecture & Features
-- **"One Node, One Task" Isolation:** Decoupled execution steps for scalable logging and deterministic error handling.
-- **Structured Output Parsing:** Enforces strict JSON schema validation to guarantee reliable database writes.
-- **Human-in-the-Loop Validation:** Route notifications to Slack requiring manual approval prior to dispatching external communications.
+All automation workflows in this repository are built around core enterprise principles:
 
-## 📁 Repository Structure
-- [`workflows/n8n-workflow.json`](workflows/n8n-workflow.json) : Exported n8n workflow file (sanitized).
-- [`docs/Automation_Agent_Brief_EN.pdf`](docs/Automation_Agent_Brief_EN.pdf) : Full AI Brief Proposal & System Spec (English).
-- [`docs/Automation_Agent_Brief_DE.pdf`](docs/Automation_Agent_Brief_DE.pdf) : AI-Briefing-Vorschlag & Systemspezifikation (Deutsch).
+* **Strict Determinism & Governance:** AI components are strictly isolated to structured data extraction and draft generation. Critical business operations, downstream database writes, and external communications are always governed by explicit rule-based gatekeeping.
+* **Human-in-the-Loop (HITL) Validation:** High-stakes workflows incorporate mandatory approval steps via Slack, email, or webhooks before external payloads are dispatched.
+* **"One Node, One Task" Isolation:** Modular node design ensures decoupled execution, simplified logging, precise error handling, and robust fault tolerance.
+* **Data Privacy & Compliance (GDPR / Minimal Risk):** Data pipelines are designed with data minimization, local environment isolation, and payload anonymization prior to external API consumption.
 
-## 🚀 How to Import into n8n
-1. Download `workflows/n8n-workflow.json`.
-2. Open your n8n instance and navigate to **Workflows**.
-3. Click **Import from File** and select `n8n-workflow.json`.
-4. Re-bind your local API credentials and environment variables.
+---
+
+## 📁 Repository Structure & Projects
+
+Each automation project is organized in its own self-contained folder containing its exported n8n workflow file, documentation/briefs, and canvas visual representations.
+
+```text
+.
+├── enquiry-ingestion-automation/   # Multi-channel order ingestion pipeline
+├── [future-workflow-name]/         # Reserved for next workflow project
+└── README.md                       # Main portfolio overview
