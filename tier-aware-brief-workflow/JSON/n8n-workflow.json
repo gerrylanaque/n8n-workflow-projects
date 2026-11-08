@@ -1,1 +1,511 @@
-
+{
+  "name": "Tier-Aware Brief Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -48
+      ],
+      "id": "fd4f8f00-883f-471e-966a-d3b128f893cd",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0019aa48-90cf-4b7e-8f7c-4cbee397f5d0",
+              "name": "companyName",
+              "value": "Soylent Industries",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        -48
+      ],
+      "id": "85fd16f6-0bc9-4823-8832-26805143f453",
+      "name": "Test Request"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_AIRTABLE_BASE_ID",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_ACCOUNTS_TABLE_ID",
+          "mode": "id",
+          "cachedResultName": "Accounts"
+        },
+        "filterByFormula": "={companyName} = '{{ $json.companyName }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -48
+      ],
+      "id": "1dcd50cf-2cb5-49b5-a117-f4f07d89a6b5",
+      "name": "Search records",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26dd49f3-b51c-4f2e-af3c-c01fc10c2676",
+              "name": "accountID",
+              "value": "={{ $json.fields.accountId }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b5f30c-63a2-463a-bc86-65ed4a920bea",
+              "name": "companyName",
+              "value": "={{ $json.fields.companyName }}",
+              "type": "string"
+            },
+            {
+              "id": "00bea557-d803-40e2-ae40-0fe2169a2e7e",
+              "name": "tier",
+              "value": "={{ $json.fields.tier }}",
+              "type": "string"
+            },
+            {
+              "id": "c2ad173b-8d04-4279-80a4-9434771c16ff",
+              "name": "ownerCSM",
+              "value": "={{ $json.fields.ownerCSM }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        -48
+      ],
+      "id": "e4bc0522-76cd-405a-82a5-7069cdba8eb2",
+      "name": "Carry Account Context"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.tier }}",
+                    "rightValue": "enterprise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7363d96d-aecd-4954-9391-67eb70df4555"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0ad04be9-0c29-41c6-994a-5ce1ac40dc4e",
+                    "leftValue": "={{ $json.tier }}",
+                    "rightValue": "mid-market",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "5c83d358-179a-42de-84db-5efe974d2586",
+                    "leftValue": "={{ $json.tier }}",
+                    "rightValue": "startup",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "3bda4668-86f0-4c5c-a782-eb63a825a248",
+      "name": "Route by Tier"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "097be31c-1377-4562-8906-6308a9c96a73",
+              "name": "briefDepth ",
+              "value": "full",
+              "type": "string"
+            },
+            {
+              "id": "7358e516-6645-45d7-af2c-a05609c74ab3",
+              "name": "tools",
+              "value": "accounts, usage, support, billing, interactions",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        -336
+      ],
+      "id": "cd9363d1-18c2-42aa-88b0-1ae515c0eab5",
+      "name": "Enterprise Brief Stub"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09ee63b1-d794-41bd-9ad8-4c410174c0fa",
+              "name": "briefDepth ",
+              "value": "light",
+              "type": "string"
+            },
+            {
+              "id": "d770df5b-4f1e-4bf6-85d8-5c4f8b479288",
+              "name": "tools",
+              "value": "account, usage, ticket-count",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        -144
+      ],
+      "id": "96d0b06f-0c0b-4bf8-951c-cf19cbc14881",
+      "name": "Mid-Market Brief Stub"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e2fd319b-6bce-4383-8c6f-4faf5734f361",
+              "name": "briefDepth ",
+              "value": "minimal",
+              "type": "string"
+            },
+            {
+              "id": "6eb1c631-dd19-45c4-8e1d-63ceaaf19203",
+              "name": "tools ",
+              "value": "account-only",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        48
+      ],
+      "id": "8e45d84e-ef7f-455b-a0c5-4731515c7dcb",
+      "name": "Startup Brief Stub"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f95de6fb-7ff7-4598-a09e-99a88cc6f479",
+              "name": "briefDepth ",
+              "value": "unknown",
+              "type": "string"
+            },
+            {
+              "id": "d602ba3c-58a0-4624-8f4b-05f23673df00",
+              "name": "tools",
+              "value": "account-only",
+              "type": "string"
+            },
+            {
+              "id": "934af667-2818-4535-9180-5b3b856d2a4e",
+              "name": "warning",
+              "value": "Unrecognised tier value, defaulting to minimal brief",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1120,
+        240
+      ],
+      "id": "0927606a-2e73-4c6a-a769-63e999cb5ce7",
+      "name": "Fallback Brief Stub"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        -80
+      ],
+      "id": "51bc3010-9f0b-4762-bb59-be6a23ec7bb6",
+      "name": "Combine Branches"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "326b9c08-e21d-4889-b478-39a09efd6cf8",
+              "name": "messageBody",
+              "value": "=Brief for {{ $('Carry Account Context').item.json.tier }} tier: - Account:{{ $('Carry Account Context').item.json.companyName }}  - Tools to call: {{ $json['tools '] }} - Depth: {{ $json['briefDepth '] }}",
+              "type": "string"
+            },
+            {
+              "id": "8abc1187-486c-4da5-8cfd-35eba5f5ce29",
+              "name": "channel",
+              "value": "#customer-service",
+              "type": "string"
+            },
+            {
+              "id": "761553ea-a9a9-45d1-910c-2e03cfdc4c07",
+              "name": "companyName",
+              "value": "={{ $('Carry Account Context').item.json.companyName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        -80
+      ],
+      "id": "1d78e75b-c94c-48af-a516-f229954c3e68",
+      "name": "Format for Slack"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Test Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Request": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Carry Account Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry Account Context": {
+      "main": [
+        [
+          {
+            "node": "Route by Tier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Tier": {
+      "main": [
+        [
+          {
+            "node": "Enterprise Brief Stub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mid-Market Brief Stub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Startup Brief Stub",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback Brief Stub",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enterprise Brief Stub": {
+      "main": [
+        [
+          {
+            "node": "Combine Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mid-Market Brief Stub": {
+      "main": [
+        [
+          {
+            "node": "Combine Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Startup Brief Stub": {
+      "main": [
+        [
+          {
+            "node": "Combine Branches",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Fallback Brief Stub": {
+      "main": [
+        [
+          {
+            "node": "Combine Branches",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Combine Branches": {
+      "main": [
+        [
+          {
+            "node": "Format for Slack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
