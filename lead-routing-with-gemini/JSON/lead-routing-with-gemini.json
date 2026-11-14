@@ -1,0 +1,963 @@
+{
+  "name": "Hearth & Pine - Lead Routing - Gemini",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "YOUR_WEBHOOK_PATH",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -1040,
+        -16
+      ],
+      "id": "b0b0f710-c6d3-4369-8ed8-c8802b025b11",
+      "name": "Webhook",
+      "webhookId": "REMOVED"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "high",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e9ec5d96-f2db-4ca0-895b-2f8fa9eda4d7"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "679842cd-4fa9-49c0-856a-7229cac75928",
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "fe5ab2f4-dff2-4a7e-9d82-600cca1b230f",
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "l",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f1a8a5b6-a30b-4b79-8cdc-b4c3c58e85ac",
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "spam",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        336,
+        -48
+      ],
+      "id": "a232ee48-a87d-4c87-b7c2-6d77b3f06f9e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "leads"
+        },
+        "text": "=High-priority \nlead Company: {{ $('parse extract').item.json.extracted.company_name }}\nContact: null\nSize: {{ $('parse extract').item.json.extracted.estimated_size }}\nType: {{ $('parse extract').item.json.extracted.enquiry_type }} \nMessage: {{ $('parse extract').item.json.extracted.enquiry_body }}\nWebsite: {{ $('parse extract').item.json.extracted.website_url }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        560,
+        -304
+      ],
+      "id": "2e9cd4c8-7e2c-4a5e-8573-edad3f52f589",
+      "name": "Send a message",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company_name": "={{ $('parse extract').item.json.extracted.company_name }}",
+            "contact_email": "={{ $('parse extract').item.json.extracted.contact_email }}",
+            "body": "={{ $('parse extract').item.json.extracted.enquiry_body }}",
+            "estimated_size": "={{ $('parse extract').item.json.extracted.estimated_size }}",
+            "enquiry_type": "={{ $('parse extract').item.json.extracted.enquiry_type }}",
+            "red_flags": "={{ ($('parse extract').item.json.extracted.red_flags ?? []).join(', ') }}",
+            "priority": "={{ $('parse classify').item.json.priority }}",
+            "priority_tag": "nurture"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contact_email",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "estimated_size",
+              "displayName": "estimated_size",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "small",
+                  "value": "small"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "large",
+                  "value": "large"
+                },
+                {
+                  "name": "unknown",
+                  "value": "unknown"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "enquiry_type",
+              "displayName": "enquiry_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "wholesale",
+                  "value": "wholesale"
+                },
+                {
+                  "name": "reseller",
+                  "value": "reseller"
+                },
+                {
+                  "name": "partnership",
+                  "value": "partnership"
+                },
+                {
+                  "name": "distribution",
+                  "value": "distribution"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "red_flags",
+              "displayName": "red_flags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                },
+                {
+                  "name": "spam",
+                  "value": "spam"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority_tag",
+              "displayName": "priority_tag",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "nurture",
+                  "value": "nurture"
+                },
+                {
+                  "name": "archive",
+                  "value": "archive"
+                },
+                {
+                  "name": "spam",
+                  "value": "spam"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        -112
+      ],
+      "id": "87225912-12bb-4116-8fe3-905f09a84356",
+      "name": "Create a record - nurture",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company_name": "={{ $('parse extract').item.json.extracted.company_name }}",
+            "contact_email": "={{ $('parse extract').item.json.extracted.contact_email }}",
+            "body": "={{ $('parse extract').item.json.extracted.enquiry_body }}",
+            "estimated_size": "={{ $('parse extract').item.json.extracted.estimated_size }}",
+            "red_flags": "={{ ($('parse extract').item.json.extracted.red_flags ?? []).join(', ') }}",
+            "priority_tag": "archive",
+            "priority": "={{ $('parse classify').item.json.priority }}",
+            "enquiry_type": "={{ $('parse extract').item.json.extracted.enquiry_type }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contact_email",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "estimated_size",
+              "displayName": "estimated_size",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Todo",
+                  "value": "Todo"
+                },
+                {
+                  "name": "In progress",
+                  "value": "In progress"
+                },
+                {
+                  "name": "Done",
+                  "value": "Done"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "enquiry_type",
+              "displayName": "enquiry_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "array",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "red_flags",
+              "displayName": "red_flags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority_tag",
+              "displayName": "priority_tag",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "nurture",
+                  "value": "nurture"
+                },
+                {
+                  "name": "archive",
+                  "value": "archive"
+                },
+                {
+                  "name": "spam",
+                  "value": "spam"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        80
+      ],
+      "id": "f51ff66d-e066-4fcf-9107-d24e4fba34d5",
+      "name": "Create a record - archive",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Leads",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "company_name": "={{ $('parse extract').item.json.extracted.company_name }}",
+            "estimated_size": "={{ $('parse extract').item.json.extracted.estimated_size }}",
+            "body": "={{ $('parse extract').item.json.extracted.enquiry_body }}",
+            "contact_email": "={{ $('parse extract').item.json.extracted.contact_email }}",
+            "enquiry_type": "={{ $('parse extract').item.json.extracted.enquiry_type }}",
+            "red_flags": "={{ ($('parse extract').item.json.extracted.red_flags ?? []).join(', ') }}",
+            "priority_tag": "spam",
+            "priority": "={{ $('parse classify').item.json.priority }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "company_name",
+              "displayName": "company_name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "contact_email",
+              "displayName": "contact_email",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "body",
+              "displayName": "body",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "estimated_size",
+              "displayName": "estimated_size",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "small",
+                  "value": "small"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "large",
+                  "value": "large"
+                },
+                {
+                  "name": "unknown",
+                  "value": "unknown"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "enquiry_type",
+              "displayName": "enquiry_type",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "wholesale",
+                  "value": "wholesale"
+                },
+                {
+                  "name": "reseller",
+                  "value": "reseller"
+                },
+                {
+                  "name": "partnership",
+                  "value": "partnership"
+                },
+                {
+                  "name": "distribution",
+                  "value": "distribution"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "red_flags",
+              "displayName": "red_flags",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority",
+              "displayName": "priority",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                },
+                {
+                  "name": "spam",
+                  "value": "spam"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "priority_tag",
+              "displayName": "priority_tag",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "nurture",
+                  "value": "nurture"
+                },
+                {
+                  "name": "archive",
+                  "value": "archive"
+                },
+                {
+                  "name": "spam",
+                  "value": "spam"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        272
+      ],
+      "id": "cb991a32-42fd-49c4-8930-0472c6b04b51",
+      "name": "Create a record - spam",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "Gemini 3.1 Flash Lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a lead extractor for Hearth & Pine, an online home-goods retailer.\n\nInput: a wholesale or partnership enquiry from a company's website.\n\nExtract these fields and return valid JSON:\n- \"company_name\": the company's name\n- \"contact_name\": the contact's name\n- \"contact_email\": the contact's email\n- \"estimated_size\": one of \"small\", \"medium\", \"large\", or \"unknown\"\n- \"enquiry_type\": one of \"wholesale\", \"partnership\", \"reseller\", \"distribution\", or \"other\"\n- \"enquiry_body\": the issue summary\n- \"website_url\": the company's website\n- \"red_flags\": a list of concerns; use [] if there are none\n\nRules:\n- Base \"estimated_size\" on contextual clues such as store count, typical order volume, number of locations, or known brand names.\n- Use \"unknown\" for \"estimated_size\" if size is unclear.\n- Use null for \"company_name\" if it cannot be determined.\n- Use \"other\" for \"enquiry_type\" if it cannot be determined or does not fit the other categories.\n- Return only JSON. Do not include markdown, comments, or explanatory text.\n\nCompany name as submitted: {{ $json.body.company_name }}\nContact name: {{ $json.body.contact_name }}\nContact email: {{ $json.body.contact_email }}\nStore type: {{ $json.body.store_type }}\nEnquiry message: {{ $json.body.enquiry_body }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -816,
+        -16
+      ],
+      "id": "171d0a96-3a04-4eda-bc4b-7a6dd661b0b3",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c29c091d-6f85-4924-b895-003d0ed87ac2",
+              "name": "extracted",
+              "value": "={{ JSON.parse($json.content.parts[0].text) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -464,
+        -16
+      ],
+      "id": "a469e40d-93b7-4134-b9f8-5631b0fc4e08",
+      "name": "parse extract"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "Gemini 3.1 Flash Lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a lead priority classifier for Hearth & Pine, an online home-goods retailer.\nYour task is to classify an inbound wholesale or partnership lead.\nReturn exactly one valid JSON object with this shape:\n{\n\"priority\": \"high\" | \"medium\" | \"low\" | \"spam\"\n}\nPriority definitions:\n\"spam\": The enquiry is irrelevant, generic, suspicious, copy-pasted, has spam-like patterns, or has no clear business purpose.\n\"high\": The lead appears to be a strong commercial opportunity. Use this only when the company is large, established, a recognizable brand, or clearly asking about partnership, distribution, or high-volume wholesale.\n\"medium\": The lead appears legitimate and has a clear wholesale, boutique, reseller, or retail purpose, but is not obviously large or strategic.\n\"low\": The lead may be legitimate but has weak fit, unclear fit, very small scale, limited commercial potential, or minor red flags.\nDecision rules:\nIf red_flags includes spam patterns, generic copy-pasted content, suspicious content, or unclear purpose, return:\n{\"priority\": \"spam\"}\nIf enquiry_type is \"other\" and there is no clear business purpose, return:\n{\"priority\": \"spam\"}\nReturn \"high\" only if estimated_size is \"large\" OR the company name appears to be a recognizable established brand.\nReturn \"medium\" for legitimate small or medium retailers, boutiques, or resellers with a clear wholesale purpose and no red flags.\nReturn \"low\" for small companies with unclear fit, early-stage businesses, weak commercial potential, or non-spam red flags.\nIf multiple rules could apply, use this priority order:\nspam > high > medium > low\nDo not invent information.\nDo not assume a company is large unless the input supports it.\nReturn only valid JSON.\nDo not include markdown, comments, explanations, or a preamble.\nDo not wrap the JSON in a code block.\nExtracted lead data:\ncompany_name: {{ $json.extracted.company_name }}\nestimated_size: {{ $json.extracted.estimated_size }}\nenquiry_type: {{ $json.extracted.enquiry_type }}\nred_flags: {{ JSON.stringify($json.extracted.red_flags ?? []) }}\nClassify this lead now."
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -240,
+        -16
+      ],
+      "id": "4da0c4d7-2c64-4414-a840-cfbdeb174066",
+      "name": "classify2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "622e5d11-0757-4958-8f0f-2973bb62d1e8",
+              "name": "priority",
+              "value": "={{ JSON.parse($json.content.parts[0].text).priority }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        112,
+        -16
+      ],
+      "id": "3dd4bef7-2e1a-473e-8174-b58793d9f017",
+      "name": "parse classify"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a record - nurture",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a record - archive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a record - spam",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "parse extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse extract": {
+      "main": [
+        [
+          {
+            "node": "classify2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "classify2": {
+      "main": [
+        [
+          {
+            "node": "parse classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "parse classify": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "REMOVED",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "REMOVED",
+  "tags": []
+}
