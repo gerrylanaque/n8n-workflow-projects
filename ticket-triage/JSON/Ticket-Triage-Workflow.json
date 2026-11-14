@@ -1,0 +1,1363 @@
+{
+  "name": "Hearth & Pine — Ticket Triage - OpenRouter",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "YOUR_WEBHOOK_PATH",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        -96,
+        -1312
+      ],
+      "id": "610bcb00-f6cb-4109-aaf9-19fc5fca4b00",
+      "name": "Webhook",
+      "webhookId": "REMOVED"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "948584a5-f7f9-4b72-bb80-298ede1b7e45",
+              "name": "email",
+              "value": "={{ $json.body.customerEmail }}",
+              "type": "string"
+            },
+            {
+              "id": "387e4b13-e7be-487c-9d82-654aa9a23332",
+              "name": "ticketId",
+              "value": "={{ $json.body.ticketId }}",
+              "type": "string"
+            },
+            {
+              "id": "27a7ca8b-65c8-44c7-afd2-f23f33e2ced4",
+              "name": "issueSummary",
+              "value": "={{ $json.body.body }}",
+              "type": "string"
+            },
+            {
+              "id": "46d649c0-98b2-4859-ab8a-50ee2e171006",
+              "name": "subject",
+              "value": "={{ $json.body.subject }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        128,
+        -1312
+      ],
+      "id": "60ebe025-72a3-4f40-87bf-d6b377fa0094",
+      "name": "Prepare"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an information extraction assistant for Hearth & Pine, an online home-goods retailer.\n\nYour task is to extract structured information from a customer support ticket.\n\nReturn exactly one valid JSON object with these four fields:\n\n{\n  \"customerEmail\": string | null,\n  \"orderId\": string | null,\n  \"itemMentioned\": string | null,\n  \"issueSummary\": string | null\n}\n\nField definitions:\n\n- \"customerEmail\": The customer's email address. Use the explicit customer email field if provided. If not provided, extract it from the ticket body only if it is clearly mentioned. Otherwise return null.\n- \"orderId\": A Hearth & Pine order ID. It always starts with \"HP-\" followed by digits, for example \"HP-29088\". Extract only the order ID value. If no valid order ID is mentioned, return null.\n- \"itemMentioned\": The specific product the customer is asking about, such as \"cedarwood candle\" or \"linen pillow cover\". Use the most specific product name available. If no specific product is named, return null.\n- \"issueSummary\": One neutral, descriptive sentence under 20 words summarizing the customer's issue or request. Do not quote the customer directly.\n\nRules:\n\n- Do not invent, infer, or assume missing values.\n- If a field cannot be confidently extracted, return null.\n- Return only valid JSON.\n- Do not include markdown, comments, explanations, or a preamble.\n- Do not wrap the JSON in a code block.\n\nTicket Metadata:\n- Order ID: {{ $json.orderId }}\n- Customer Email: {{ $json.email }}\n\nTicket Issue / Summary:\n{{ $json.issueSummary }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        800,
+        -1120
+      ],
+      "id": "f127ba7d-92ab-4623-ada5-584b788ac4fa",
+      "name": "Extract"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        816,
+        -912
+      ],
+      "id": "5475cebd-adfb-430d-915a-d133bdf15987",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"customerEmail\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"orderId\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"itemMentioned\": {\n      \"type\": [\"string\", \"null\"]\n    },\n    \"issueSummary\": {\n      \"type\": [\"string\", \"null\"]\n    }\n  },\n  \"required\": [\n    \"customerEmail\",\n    \"orderId\",\n    \"itemMentioned\",\n    \"issueSummary\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        -912
+      ],
+      "id": "fd366582-d10f-4910-a5f0-9505aea6e29b",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a support ticket classifier for Hearth & Pine, an online home-goods retailer.\n\nClassify the customer support ticket using the extracted data provided below.\n\nReturn exactly one valid JSON object with this shape:\n\n{\n  \"urgency\": \"high\" | \"medium\" | \"low\",\n  \"topic\": \"shipping\" | \"order-status\" | \"complaint\" | \"return\" | \"wholesale\" | \"other\"\n}\n\nUrgency definitions:\n\n- \"high\": damaged or defective items, missing or lost orders, angry or hostile tone, threats to cancel, legal mentions, or repeated problems with Hearth & Pine.\n- \"medium\": delayed orders, refund questions, shipping address changes, or general dissatisfaction without anger.\n- \"low\": routine order-status checks, product questions, general enquiries, wholesale enquiries, spam, or unclear requests.\n\nTopic definitions:\n\n- \"shipping\": delivery questions, address changes, or tracking issues.\n- \"order-status\": questions about where an order is or when it will arrive.\n- \"complaint\": damaged items, defective items, dissatisfaction, anger, or negative customer experience.\n- \"return\": return requests or exchange requests.\n- \"wholesale\": retailer, boutique, bulk pricing, or wholesale enquiries.\n- \"other\": anything not covered above, spam, or unclear tickets.\n\nDecision rules:\n\n- If the ticket mentions damage, breakage, defects, leaking, cracks, or other product condition problems, return:\n  {\"urgency\": \"high\", \"topic\": \"complaint\"}\n- If the ticket shows anger, frustration, hostile tone, repeated issues, or asks what Hearth & Pine will do about the problem, return:\n  {\"urgency\": \"high\", \"topic\": \"complaint\"}\n- If the ticket is a wholesale enquiry, return:\n  {\"urgency\": \"low\", \"topic\": \"wholesale\"}\n- If multiple rules could apply, choose the highest urgency.\n- Do not invent information.\n- Return only valid JSON.\n- Do not include markdown, comments, explanations, or a preamble.\n- Do not wrap the JSON in a code block.\n\nAnalyze the customer ticket and classify it into urgency, topic, and category.\n\nAssign a 'confidence' score between 0.0 and 1.0 based on these criteria:\n- 0.85 - 1.00: Highly specific issue with a clear actionable request (e.g., explicit order issue, precise technical problem).\n- 0.60 - 0.70: Vague, general, or ambiguous tickets where the exact issue or intent is unclear (e.g., generic inquiries like \"Question about something\", \"I need help\", or \"Not sure if this matters\").\n- Below 0.60: Nonsensical or completely unclassifiable content.\n\nCRITICAL INSTRUCTION: If the ticket lacks specific details, issue descriptions, or clear customer intent, you MUST set confidence below 0.70.\n\nTicket data:\n\ncustomer_email: {{ $json.output.customerEmail }}\norder_id: {{ $json.output.orderId }}\nitem_mentioned: {{ $json.output.itemMentioned }}\nissue_summary: {{ $json.output.issueSummary }}\n\nClassify this ticket now.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1152,
+        -1120
+      ],
+      "id": "6bb0142d-8497-4aeb-8d32-5c49869d632e",
+      "name": "Classify"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1168,
+        -912
+      ],
+      "id": "1f859b78-b526-4b30-a7db-dcbd63911611",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"urgency\": {\n      \"type\": \"string\",\n      \"enum\": [\"high\", \"medium\", \"low\"]\n    },\n    \"topic\": {\n      \"type\": \"string\",\n      \"enum\": [\"shipping\", \"order-status\", \"complaint\", \"return\", \"wholesale\", \"other\"]\n    },\n    \"category\": { \n      \"type\": \"string\" \n    },\n    \"confidence\": {\n      \"type\": \"number\",\n      \"description\": \"Confidence score between 0.0 and 1.0\"\n    }\n  },\n  \"required\": [\"urgency\", \"topic\", \"category\", \"confidence\"],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1296,
+        -912
+      ],
+      "id": "a2192377-5552-470a-9ef7-16a83492b1a6",
+      "name": "Structured Output Parser1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "high",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "214f1e4b-8186-4732-9a2d-1db5a6e0995b"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a33c1f0b-6110-4620-b720-b5c4339ba769",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "04669c7d-9cad-4041-bf36-789b63ea225d",
+                    "leftValue": "={{ $json.output.urgency }}",
+                    "rightValue": "low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1728,
+        -944
+      ],
+      "id": "43bbdd0c-72fe-4af5-9f2e-e9c65aa9f931",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "orderId": "={{ $('Extract').item.json.output.orderId }}",
+            "customerEmail": "={{ $('Extract').item.json.output.customerEmail }}",
+            "issueSummary": "={{ $('Extract').item.json.output.issueSummary }}",
+            "urgency": "={{ $json.output.urgency }}",
+            "topic": "={{ $json.output.topic }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customerEmail",
+              "displayName": "customerEmail",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "issueSummary",
+              "displayName": "issueSummary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "shipping",
+                  "value": "shipping"
+                },
+                {
+                  "name": "order-status",
+                  "value": "order-status"
+                },
+                {
+                  "name": "complaint",
+                  "value": "complaint"
+                },
+                {
+                  "name": "return",
+                  "value": "return"
+                },
+                {
+                  "name": "wholesale",
+                  "value": "wholesale"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        -928
+      ],
+      "id": "8970edbd-ce51-4907-a0bf-d14f4d2a7730",
+      "name": "Create a record",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.customerEmail }}",
+        "subject": "=Re: {{ $('Prepare').item.json.subject }}",
+        "message": "Hi there, Thanks for reaching out to Hearth & Pine. We've received your message and a member of our team will respond within 24 hours. If you need to update or add details, just reply to this email. The Hearth & Pine team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2016,
+        -736
+      ],
+      "id": "46630012-25ee-4668-87e3-b7561f1d41dc",
+      "name": "Send a message1",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "urgency": "low",
+            "customerEmail": "={{ $('Prepare').item.json.email }}",
+            "orderId": "={{ $('Prepare').item.json.ticketId }}",
+            "issueSummary": "={{ $('Prepare').item.json.issueSummary }}",
+            "Status": "auto-acknowledged"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customerEmail",
+              "displayName": "customerEmail",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "issueSummary",
+              "displayName": "issueSummary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "shipping",
+                  "value": "shipping"
+                },
+                {
+                  "name": "order-status",
+                  "value": "order-status"
+                },
+                {
+                  "name": "complaint",
+                  "value": "complaint"
+                },
+                {
+                  "name": "return",
+                  "value": "return"
+                },
+                {
+                  "name": "wholesale",
+                  "value": "wholesale"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "auto-acknowledged",
+                  "value": "auto-acknowledged"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        2304,
+        -736
+      ],
+      "id": "a1e0ab46-961c-4ef5-8b03-5a3786c7a405",
+      "name": "Create a record2",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a customer service reply drafter for Hearth & Pine, a specialty home-goods retailer.\n\nContext: The customer has submitted an angry, damaged-item, defective-item, or complaint ticket.\n\nDraft a short customer-facing reply that:\n- Acknowledges the issue specifically, using the item or problem mentioned in the ticket.\n- Apologizes for the experience without admitting fault, liability, or responsibility.\n- States the next step clearly, including that a support specialist will review the case and follow up.\n- Gives a clear follow-up expectation, such as \"within one business day.\"\n- Uses a calm, human, non-corporate tone.\n- Is 3-5 sentences maximum.\n\nDo not:\n- Promise a refund, replacement, discount, or specific resolution.\n- Say the company is at fault.\n- Use brand slogans.\n- Use corporate phrases like \"we value your business\" or \"we apologize for any inconvenience.\"\n- Include markdown, comments, explanations, or a preamble.\n\nReturn exactly one valid JSON object with this shape:\n\n{\n  \"draftReply\": \"string\"\n}\n\nInput:\ncustomerEmail: {{ $('Extract').item.json.output.customerEmail }}\nissueSummary: {{ $('Extract').item.json.output.issueSummary }}\nitemMentioned: {{ $('Extract').item.json.output.itemMentioned }}\norderId: {{ $('Extract').item.json.output.orderId }}\n\nDraft the reply now.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1952,
+        -1328
+      ],
+      "id": "046834d6-db8e-49da-9beb-adcf8da586d2",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        1968,
+        -1104
+      ],
+      "id": "c5e701aa-162e-4e8d-8cf5-7203fb09c364",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"draftReply\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\"draftReply\"],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2096,
+        -1104
+      ],
+      "id": "5e6d96f3-2c31-4a91-90c1-0a5331321f80",
+      "name": "Structured Output Parser2"
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#customer-service",
+          "mode": "name"
+        },
+        "message": "=Reply draft ready for review\n\nTicket: {{ $('Prepare').item.json.ticketId }}\nCustomer: {{ $('Prepare').item.json.email }}\nIssue: {{ $('Extract').item.json.output.issueSummary }}\n\nDraft reply: {{ $json.output.draftReply }}\n\nApprove to send as drafted, or reject to write your own reply manually. ",
+        "approvalOptions": {
+          "values": {
+            "approvalType": "double"
+          }
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2304,
+        -1216
+      ],
+      "id": "d5460b6b-bd11-4591-a141-f5dc08a3a271",
+      "name": "Send message and wait for response",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bdae9725-d60f-4781-a448-26e52d6caa65",
+              "leftValue": "={{ $json.data.approved }}",
+              "rightValue": "={{ true }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2528,
+        -1216
+      ],
+      "id": "024c52a9-5b99-4ec1-8f09-b1ba7e1c589f",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Extract').item.json.output.customerEmail }}",
+        "subject": "={{ $('Extract').item.json.output.orderId }} - {{ $('Extract').item.json.output.itemMentioned }}",
+        "message": "={{ $('Basic LLM Chain').item.json.output.draftReply }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2752,
+        -1312
+      ],
+      "id": "88dd3e13-fe1f-43db-8358-470e838fc736",
+      "name": "Send a message",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Gmail account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "customer-service"
+        },
+        "text": "=Draft rejected for ticket {{ $('Prepare').item.json.ticketId }}. No auto-reply sent. Please write a manual reply.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2752,
+        -1120
+      ],
+      "id": "8a637edf-d8fc-4d65-b48a-ca8182faddda",
+      "name": "Send a message2",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "45b40acf-3cea-4aa5-8b5f-3bb25d468a1a",
+              "leftValue": "={{ (($json.body.subject || '') + ' ' + ($json.body.body || '')).toLowerCase() }}",
+              "rightValue": "\\b(lawsuit|lawyer|attorney|legal|sue|fraud|scam|stolen|unauthorized|chargeback|refund|urgent|supervisor|manager|report|authorities)\\b",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        352,
+        -1312
+      ],
+      "id": "2dd15460-2e7d-41b1-a657-064a29711f57",
+      "name": "High risk keyword check"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b5fd24a8-16ea-4f2d-bb8b-af2431bc17af",
+              "leftValue": "={{ $json.body.ticketId }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        576,
+        -1248
+      ],
+      "id": "7d74efe6-424a-491f-9772-74b62f8caa0c",
+      "name": "Missing order id check"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "customer-service"
+        },
+        "text": "=High-priority\n\nTicket ID: {{ $('Prepare').item.json.body.ticketId }}\nContact: {{ $('Prepare').item.json.body.customerEmail }}\nSubject: {{ $('Prepare').item.json.body.subject }}\nMessage: {{ $('Prepare').item.json.body.body }}\n\nAssess this case and escalate.",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        2016,
+        -1568
+      ],
+      "id": "f1e4c192-1e6b-4bd5-9e5e-c42fb2b5fb55",
+      "name": "escalation",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0166525f-8c56-4740-9c43-ef8591e72121",
+              "leftValue": "={{ $json.output.confidence }}",
+              "rightValue": 0.7,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "cb459c6f-ec44-419b-98e2-725d98a40582",
+              "leftValue": "={{ $json.output.topic }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "8dcc9f3d-d114-41a4-807a-7ef1831bbce9",
+              "leftValue": "={{ $json.output.urgency }}",
+              "rightValue": "^(low|medium|high)$",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1504,
+        -1120
+      ],
+      "id": "92f41f56-9476-4541-b8c1-c64702ebd399",
+      "name": "If node"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Tickets",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Table 1",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "orderId": "={{ $('Extract').item.json.output.orderId }}",
+            "customerEmail": "={{ $('Extract').item.json.output.customerEmail }}",
+            "issueSummary": "={{ $('Extract').item.json.output.issueSummary }}",
+            "urgency": "={{ $('Classify').item.json.output.urgency }}",
+            "topic": "={{ $('Classify').item.json.output.topic }}",
+            "confidence": "={{ $('Classify').item.json.output.confidence }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "orderId",
+              "displayName": "orderId",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "customerEmail",
+              "displayName": "customerEmail",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "issueSummary",
+              "displayName": "issueSummary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "high",
+                  "value": "high"
+                },
+                {
+                  "name": "medium",
+                  "value": "medium"
+                },
+                {
+                  "name": "low",
+                  "value": "low"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "shipping",
+                  "value": "shipping"
+                },
+                {
+                  "name": "order-status",
+                  "value": "order-status"
+                },
+                {
+                  "name": "complaint",
+                  "value": "complaint"
+                },
+                {
+                  "name": "return",
+                  "value": "return"
+                },
+                {
+                  "name": "wholesale",
+                  "value": "wholesale"
+                },
+                {
+                  "name": "other",
+                  "value": "other"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "auto-acknowledged",
+                  "value": "auto-acknowledged"
+                }
+              ],
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        1728,
+        -1344
+      ],
+      "id": "37f1c461-2913-4227-a2b2-24108228ebbb",
+      "name": "Audit",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Prepare",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare": {
+      "main": [
+        [
+          {
+            "node": "High risk keyword check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Extract",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Extract",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract": {
+      "main": [
+        [
+          {
+            "node": "Classify",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Classify",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify": {
+      "main": [
+        [
+          {
+            "node": "If node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Create a record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Create a record2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send message and wait for response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser2": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send message and wait for response": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "High risk keyword check": {
+      "main": [
+        [
+          {
+            "node": "escalation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing order id check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Missing order id check": {
+      "main": [
+        [
+          {
+            "node": "escalation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If node": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Audit": {
+      "main": [
+        [
+          {
+            "node": "escalation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "REMOVED",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "REMOVED",
+  "tags": []
+}
