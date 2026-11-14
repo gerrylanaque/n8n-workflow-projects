@@ -1,0 +1,313 @@
+{
+  "name": "Account Lookup with Context",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "507abb5e-8fef-4e76-b729-097fe7363f47",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0019aa48-90cf-4b7e-8f7c-4cbee397f5d0",
+              "name": "companyName",
+              "value": "Acme Corp",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "6aed0c78-ffdd-4da8-996a-90e61b516bcb",
+      "name": "Test Request"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "YOUR_BASE_ID",
+          "mode": "list",
+          "cachedResultName": "Southern Cross",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID"
+        },
+        "table": {
+          "__rl": true,
+          "value": "YOUR_TABLE_ID",
+          "mode": "list",
+          "cachedResultName": "Accounts",
+          "cachedResultUrl": "https://airtable.com/YOUR_BASE_ID/YOUR_TABLE_ID"
+        },
+        "filterByFormula": "={companyName} = '{{ $json.companyName }}'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "d5a5880f-fd96-4cb1-abf4-af957524d5a9",
+      "name": "Search records",
+      "alwaysOutputData": true,
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "26dd49f3-b51c-4f2e-af3c-c01fc10c2676",
+              "name": "accountID",
+              "value": "={{ $json.fields.accountId }}",
+              "type": "string"
+            },
+            {
+              "id": "d3b5f30c-63a2-463a-bc86-65ed4a920bea",
+              "name": "companyName",
+              "value": "={{ $json.fields.companyName }}",
+              "type": "string"
+            },
+            {
+              "id": "00bea557-d803-40e2-ae40-0fe2169a2e7e",
+              "name": "tier",
+              "value": "={{ $json.fields.tier }}",
+              "type": "string"
+            },
+            {
+              "id": "c2ad173b-8d04-4279-80a4-9434771c16ff",
+              "name": "ownerCSM",
+              "value": "={{ $json.fields.ownerCSM }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        672,
+        0
+      ],
+      "id": "cf095ad6-2266-42eb-9295-83c388aaa335",
+      "name": "Carry Account Context"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        976,
+        240
+      ],
+      "id": "b394d046-72df-4885-959f-9257bff53c3b",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Hearth & Pine OpenRouter"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Write a one-sentence brief about this customer for a CSM walking into a check-in call.\n\nCustomer: {{ $json.companyName }}\nTier: {{ $json.tier }}\n\nThe brief should be neutral and informational. One sentence. No preamble, no quotes around the answer.",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        896,
+        0
+      ],
+      "id": "12724205-023e-4e3a-a45a-e775d65bb6eb",
+      "name": "Draft Summary"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10e0a37f-7a65-4268-8ee1-d84c2fcc1380",
+              "name": "companyName",
+              "value": "={{ $('Carry Account Context').item.json.companyName }}",
+              "type": "string"
+            },
+            {
+              "id": "56ed28c3-2ba4-44f2-8794-f8ff1ddcc944",
+              "name": "tier",
+              "value": "={{ $('Carry Account Context').item.json.tier }}",
+              "type": "string"
+            },
+            {
+              "id": "ba3df862-04aa-4a94-83a0-d87b2d8ef817",
+              "name": "ownerCSM",
+              "value": "={{ $('Carry Account Context').item.json.ownerCSM }}",
+              "type": "string"
+            },
+            {
+              "id": "0a8eda9b-0638-4332-86ea-b8b2fafaf73e",
+              "name": "summary",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1264,
+        0
+      ],
+      "id": "c1ef36a2-82e4-44ca-9cbb-1e89958f02ed",
+      "name": "Combine Summary and Context"
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "YOUR_SLACK_CHANNEL_ID",
+          "mode": "list",
+          "cachedResultName": "customer-service"
+        },
+        "text": "=📋 Brief — {{ $json.companyName }} ({{ $json.tier }}-tier, owner: {{ $json.ownerCSM }}) {{ $json.summary }}",
+        "otherOptions": {}
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        1488,
+        0
+      ],
+      "id": "0faa168d-f33e-42fd-a1f7-354cda72840a",
+      "name": "Send a message",
+      "webhookId": "REMOVED",
+      "credentials": {
+        "slackApi": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "Slack account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Test Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Request": {
+      "main": [
+        [
+          {
+            "node": "Search records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records": {
+      "main": [
+        [
+          {
+            "node": "Carry Account Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry Account Context": {
+      "main": [
+        [
+          {
+            "node": "Draft Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Draft Summary",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Draft Summary": {
+      "main": [
+        [
+          {
+            "node": "Combine Summary and Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine Summary and Context": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "REMOVED",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "REMOVED",
+  "tags": []
+}
